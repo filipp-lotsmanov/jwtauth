@@ -1,0 +1,22 @@
+# compiled binaries
+*.exe
+*.exe~
+*.dll
+*.test
+/bin/
+
+# test and coverage output
+*.out
+coverage.html
+
+# secrets (Doppler is primary, this covers local fallback)
+.env
+*.pem
+
+# editors
+.idea/
+.vscode/
+
+# go workspace (local only)
+go.work
+go.work.sum
