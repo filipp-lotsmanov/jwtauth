@@ -59,6 +59,9 @@ func (s *Signer) Parse(tokenStr string) (Claims, error) {
 }
 
 func (s *Signer) Validate(claims Claims) error {
+	if claims.Issuer != s.issuer {
+		return fmt.Errorf("%w: %q", ErrInvalidIssuer, claims.Issuer)
+	}
 	now := s.now().Unix()
 
 	if claims.ExpiresAt == 0 {

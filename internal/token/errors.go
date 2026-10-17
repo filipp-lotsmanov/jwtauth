@@ -9,4 +9,5 @@ var (
 	ErrInvalidSignature = errors.New("token: invalid signature")
 	ErrExpired          = errors.New("token: expired")
 	ErrNotYetValid      = errors.New("token: not yet valid")
+	ErrInvalidIssuer    = errors.New("token: unexpected issuer")
 )

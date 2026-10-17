@@ -22,20 +22,25 @@ type Claims struct {
 }
 
 type Signer struct {
-	key []byte
-	now func() time.Time
+	key    []byte
+	issuer string
+	now    func() time.Time
 }
 
-func NewSigner(key []byte) (*Signer, error) {
+func NewSigner(key []byte, issuer string) (*Signer, error) {
 	if len(key) < 32 {
 		return nil, ErrWeakKey
 	}
+	if issuer == "" {
+		return nil, ErrInvalidIssuer
+	}
 	k := make([]byte, len(key))
 	copy(k, key)
-	return &Signer{key: k, now: time.Now}, nil
+	return &Signer{key: k, issuer: issuer, now: time.Now}, nil
 }
 
 func (s *Signer) Sign(c Claims) (string, error) {
+	c.Issuer = s.issuer
 	MarshHeader, err := json.Marshal(header{Alg: "HS256", Typ: "JWT"})
 	if err != nil {
 		return "", err

@@ -13,8 +13,9 @@ const testNow int64 = 1760000000
 
 func testSigner() *Signer {
 	return &Signer{
-		key: []byte(vectorKey),
-		now: func() time.Time { return time.Unix(testNow, 0) },
+		key:    []byte(vectorKey),
+		issuer: vectorIssuer,
+		now:    func() time.Time { return time.Unix(testNow, 0) },
 	}
 }
 
@@ -23,7 +24,7 @@ func TestParseRoundTrip(t *testing.T) {
 
 	in := Claims{
 		Subject:   "user-42",
-		Issuer:    "jwtauth-learning",
+		Issuer:    vectorIssuer,
 		IssuedAt:  testNow,
 		ExpiresAt: testNow + 3600,
 	}
@@ -64,7 +65,7 @@ func forge(t *testing.T, s *Signer, h header, c Claims, signIt bool) string {
 }
 
 func validClaims() Claims {
-	return Claims{Subject: "user-42", IssuedAt: testNow, ExpiresAt: testNow + 3600}
+	return Claims{Subject: "user-42", Issuer: vectorIssuer, IssuedAt: testNow, ExpiresAt: testNow + 3600}
 }
 
 func mustSign(t *testing.T, s *Signer, c Claims) string {
@@ -80,8 +81,9 @@ func TestParseRejects(t *testing.T) {
 	s := testSigner()
 
 	otherKey := &Signer{
-		key: []byte("a-completely-different-secret-key"),
-		now: func() time.Time { return time.Unix(testNow, 0) },
+		key:    []byte("a-completely-different-secret-key"),
+		issuer: vectorIssuer,
+		now:    func() time.Time { return time.Unix(testNow, 0) },
 	}
 
 	valid := mustSign(t, s, validClaims())
@@ -107,21 +109,16 @@ func TestParseRejects(t *testing.T) {
 		{"two segments", parts[0] + "." + parts[1], ErrMalformedToken},
 		{"four segments", valid + ".extra", ErrMalformedToken},
 		{"header not base64", "!!!." + parts[1] + "." + parts[2], ErrMalformedToken},
-		{"header not json", base64.RawURLEncoding.EncodeToString([]byte("notjson")) + "." + parts[1] + "." + parts[2],
-			ErrMalformedToken},
-		{"alg none", forge(t, s, header{Alg: "none", Typ: "JWT"}, validClaims(), false),
-			ErrUnexpectedAlg},
-		{"alg hs512", forge(t, s, header{Alg: "HS512", Typ: "JWT"}, validClaims(), true),
-			ErrUnexpectedAlg},
+		{"header not json", base64.RawURLEncoding.EncodeToString([]byte("notjson")) + "." + parts[1] + "." + parts[2], ErrMalformedToken},
+		{"alg none", forge(t, s, header{Alg: "none", Typ: "JWT"}, validClaims(), false), ErrUnexpectedAlg},
+		{"alg hs512", forge(t, s, header{Alg: "HS512", Typ: "JWT"}, validClaims(), true), ErrUnexpectedAlg},
 		{"tampered payload", parts[0] + "." + string(tamperedPayload) + "." + parts[2], ErrInvalidSignature},
 		{"swapped signature", parts[0] + "." + parts[1] + "." + otherSig, ErrInvalidSignature},
 		{"signed with other key", mustSign(t, otherKey, validClaims()), ErrInvalidSignature},
 		{"signature not base64", parts[0] + "." + parts[1] + ".!!!", ErrMalformedToken},
 		{"no exp", mustSign(t, s, Claims{Subject: "user-42"}), ErrExpired},
-		{"expired past leeway", mustSign(t, s, Claims{Subject: "user-42",
-			ExpiresAt: testNow - constLeeway - 1}), ErrExpired},
-		{"nbf past leeway", mustSign(t, s, Claims{Subject: "user-42", ExpiresAt: testNow + 3600,
-			NotBefore: testNow + constLeeway + 1}), ErrNotYetValid},
+		{"expired past leeway", mustSign(t, s, Claims{Subject: "user-42", ExpiresAt: testNow - constLeeway - 1}), ErrExpired},
+		{"nbf past leeway", mustSign(t, s, Claims{Subject: "user-42", ExpiresAt: testNow + 3600, NotBefore: testNow + constLeeway + 1}), ErrNotYetValid},
 	}
 
 	for _, tc := range tests {
@@ -134,6 +131,24 @@ func TestParseRejects(t *testing.T) {
 				t.Errorf("claims: got %+v, want zero value", got)
 			}
 		})
+	}
+}
+
+func TestParseRejectsForeignIssuer(t *testing.T) {
+	minter := &Signer{
+		key:    []byte(vectorKey),
+		issuer: "some-other-service",
+		now:    func() time.Time { return time.Unix(testNow, 0) },
+	}
+
+	tok := mustSign(t, minter, Claims{Subject: "user-42", ExpiresAt: testNow + 3600})
+
+	got, err := testSigner().Parse(tok)
+	if !errors.Is(err, ErrInvalidIssuer) {
+		t.Errorf("error: got %v, want ErrInvalidIssuer", err)
+	}
+	if got != (Claims{}) {
+		t.Errorf("claims: got %+v, want zero value", got)
 	}
 }
 
