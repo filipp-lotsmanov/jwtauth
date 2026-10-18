@@ -39,7 +39,8 @@ func newTestSigner(t *testing.T) *token.Signer {
 
 func newAuthedHandler(t *testing.T, signer *token.Signer) *Handler {
 	t.Helper()
-	h, err := NewHandler(NewUserStore(), NewRefreshStore(), signer, bcrypt.MinCost, 15*time.Minute, 14*24*time.Hour)
+	h, err := NewHandler(NewUserStore(), NewRefreshStore(), signer, bcrypt.MinCost, 15*time.Minute,
+		14*24*time.Hour, false)
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
 	}

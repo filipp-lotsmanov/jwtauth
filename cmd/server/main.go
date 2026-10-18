@@ -47,6 +47,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("parse BCRYPT_COST: %v", err)
 	}
+	cookieSecure, err := strconv.ParseBool(mustEnv("COOKIE_SECURE"))
+	if err != nil {
+		log.Fatalf("parse COOKIE_SECURE: %v", err)
+	}
 
 	signer, err := token.NewSigner(key, issuer)
 	if err != nil {
@@ -68,7 +72,7 @@ func main() {
 		log.Fatalf("seed user: %v", err)
 	}
 
-	h, err := auth.NewHandler(store, refreshStore, signer, cost, accessTTL, refreshTTL)
+	h, err := auth.NewHandler(store, refreshStore, signer, cost, accessTTL, refreshTTL, cookieSecure)
 	if err != nil {
 		log.Fatalf("create handler: %v", err)
 	}
@@ -78,6 +82,7 @@ func main() {
 	mux.HandleFunc("POST /refresh", h.Refresh)
 	mux.HandleFunc("POST /logout", h.Logout)
 	mux.Handle("GET /me", h.RequireAuth(http.HandlerFunc(h.Me)))
+	mux.Handle("/", http.FileServerFS(os.DirFS("web/dist")))
 
 	log.Printf("listening on :%s (issuer %q, access TTL %s, refresh TTL %s)",
 		port, issuer, accessTTL, refreshTTL)

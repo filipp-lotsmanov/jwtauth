@@ -35,7 +35,7 @@ func newTestHandler(t *testing.T) (*Handler, *token.Signer) {
 		t.Fatalf("Add: %v", err)
 	}
 
-	h, err := NewHandler(store, NewRefreshStore(), signer, bcrypt.MinCost, 15*time.Minute, 14*24*time.Hour)
+	h, err := NewHandler(store, NewRefreshStore(), signer, bcrypt.MinCost, 15*time.Minute, 14*24*time.Hour, false)
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
 	}
@@ -48,6 +48,16 @@ func postLogin(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder
 	rec := httptest.NewRecorder()
 	h.Login(rec, req)
 	return rec
+}
+
+func refreshCookie(t *testing.T, rec *httptest.ResponseRecorder) *http.Cookie {
+	t.Helper()
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == refreshCookieName {
+			return c
+		}
+	}
+	return nil
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -69,9 +79,6 @@ func TestLoginSuccess(t *testing.T) {
 	if resp.AccessToken == "" {
 		t.Fatal("access_token is empty")
 	}
-	if resp.RefreshToken == "" {
-		t.Fatal("refresh_token is empty")
-	}
 
 	claims, err := signer.Parse(resp.AccessToken)
 	if err != nil {
@@ -85,6 +92,53 @@ func TestLoginSuccess(t *testing.T) {
 	}
 	if claims.ExpiresAt <= claims.IssuedAt {
 		t.Errorf("exp %d is not after iat %d", claims.ExpiresAt, claims.IssuedAt)
+	}
+}
+
+func TestLoginSetsRefreshCookie(t *testing.T) {
+	h, _ := newTestHandler(t)
+
+	rec := postLogin(t, h, fmt.Sprintf(`{"email":%q,"password":%q}`, testEmail, testPassword))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+
+	c := refreshCookie(t, rec)
+	if c == nil {
+		t.Fatal("no refresh_token cookie was set")
+	}
+	if c.Value == "" {
+		t.Error("refresh cookie is empty")
+	}
+	if !c.HttpOnly {
+		t.Error("refresh cookie is not HttpOnly; JavaScript can read the long-lived credential")
+	}
+	if c.SameSite != http.SameSiteStrictMode {
+		t.Errorf("SameSite: got %v, want Strict", c.SameSite)
+	}
+	if c.Path != "/" {
+		t.Errorf("Path: got %q, want /", c.Path)
+	}
+	if c.MaxAge <= 0 {
+		t.Errorf("MaxAge: got %d, want positive", c.MaxAge)
+	}
+}
+
+func TestLoginBodyHasNoRefreshToken(t *testing.T) {
+	h, _ := newTestHandler(t)
+
+	rec := postLogin(t, h, fmt.Sprintf(`{"email":%q,"password":%q}`, testEmail, testPassword))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+
+	if strings.Contains(rec.Body.String(), "refresh_token") {
+		t.Errorf("the refresh token is in the response body: %s", rec.Body.String())
+	}
+
+	c := refreshCookie(t, rec)
+	if c != nil && strings.Contains(rec.Body.String(), c.Value) {
+		t.Error("the refresh token value appears in the response body")
 	}
 }
 
@@ -148,8 +202,8 @@ func TestLoginFailuresReturnNoToken(t *testing.T) {
 		if strings.Contains(rec.Body.String(), "access_token") {
 			t.Errorf("body contains an access token for %s: %s", body, rec.Body.String())
 		}
-		if strings.Contains(rec.Body.String(), "refresh_token") {
-			t.Errorf("body contains a refresh token for %s: %s", body, rec.Body.String())
+		if c := refreshCookie(t, rec); c != nil && c.Value != "" {
+			t.Errorf("a refresh cookie was set on a failed login for %s", body)
 		}
 	}
 }

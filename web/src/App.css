@@ -1,0 +1,168 @@
+:root {
+    color-scheme: dark;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: #14161a;
+    color: #e6e8eb;
+}
+
+.app {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+}
+
+h2 {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b93a1;
+}
+
+h3 {
+    margin: 1rem 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b93a1;
+}
+
+.sub {
+    margin: 0;
+    color: #8b93a1;
+    font-size: 0.9rem;
+}
+
+.card {
+    background: #1c1f25;
+    border: 1px solid #2a2e36;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: #8b93a1;
+}
+
+input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background: #14161a;
+    border: 1px solid #2a2e36;
+    border-radius: 4px;
+    color: #e6e8eb;
+    font-size: 0.95rem;
+}
+
+button {
+    padding: 0.5rem 0.9rem;
+    background: #2f3540;
+    border: 1px solid #3a4150;
+    border-radius: 4px;
+    color: #e6e8eb;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+    background: #3a4150;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+button.danger {
+    border-color: #5a2b2b;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.countdown {
+    font-family: ui-monospace, monospace;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: #6fcf8f;
+}
+
+.countdown.dead {
+    color: #e06c6c;
+}
+
+pre {
+    margin: 0;
+    padding: 0.6rem;
+    background: #14161a;
+    border: 1px solid #2a2e36;
+    border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.note {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
+    color: #8b93a1;
+    line-height: 1.5;
+}
+
+code {
+    font-family: ui-monospace, monospace;
+    background: #14161a;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.78rem;
+}
+
+.result.ok {
+    border-color: #2f5a3a;
+}
+
+.result.bad {
+    border-color: #5a2b2b;
+}
+
+.log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.82rem;
+    font-family: ui-monospace, monospace;
+}
+
+.log li {
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #22252c;
+    color: #c3c8d0;
+}
+
+.at {
+    color: #6b7280;
+    margin-right: 0.6rem;
+}
