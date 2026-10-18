@@ -5,6 +5,8 @@ JWT authentication written from scratch in Go — no JWT library, no auth framew
 There's a small React frontend so the token lifecycle is something you can watch.
 
 ---
+[![CI](https://github.com/filipp-lotsmanov/jwtauth/actions/workflows/ci.yml/badge.svg)](https://github.com/filipp-lotsmanov/jwtauth/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/filipp-lotsmanov/jwtauth)](https://goreportcard.com/report/github.com/filipp-lotsmanov/jwtauth)
 
 ## Why
 
