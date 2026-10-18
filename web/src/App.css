@@ -140,6 +140,14 @@ code {
     font-size: 0.78rem;
 }
 
+.ok-text {
+    color: #6fcf8f;
+}
+
+.bad-text {
+    color: #e06c6c;
+}
+
 .result.ok {
     border-color: #2f5a3a;
 }

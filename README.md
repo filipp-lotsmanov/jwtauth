@@ -7,6 +7,7 @@ There's a small React frontend so the token lifecycle is something you can watch
 ---
 [![CI](https://github.com/filipp-lotsmanov/jwtauth/actions/workflows/ci.yml/badge.svg)](https://github.com/filipp-lotsmanov/jwtauth/actions/workflows/ci.yml)
 
+![The demo frontend: a live countdown to access-token expiry, the decoded JWT payload, and a refresh cookie that JavaScript cannot read](docs/demo1.png)
 ## Why
 
 I had known the concepts behind JWT authentication before, perhaps well enough to describe them in general terms 
@@ -137,6 +138,10 @@ sequenceDiagram
 That last diagram is the whole reason server-side refresh tokens exist. A purely stateless JWT system cannot detect that a credential was copied, and cannot take it back.
 
 ---
+
+The demo logs each step as it happens — a login, a rotation, a logout that revoked the whole family, and a fresh login after it:
+
+![The demo's request log showing login, rotation, family revocation on logout, and a subsequent login](docs/demo2.png)
 
 ## Running it
 

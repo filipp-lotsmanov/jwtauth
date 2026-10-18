@@ -126,6 +126,13 @@ export default function App() {
     const secondsLeft = claims?.exp ? claims.exp - now : null
     const expired = secondsLeft !== null && secondsLeft <= 0
 
+    // Cookies are scoped by host, not by port, so anything else ever run on
+    // localhost shows up here. What matters is whether refresh_token does.
+    const visibleCookieNames = document.cookie
+        ? document.cookie.split('; ').map((c) => c.split('=')[0])
+        : []
+    const cookieVisible = visibleCookieNames.includes('refresh_token')
+
     return (
         <div className="app">
             <header>
@@ -180,15 +187,29 @@ export default function App() {
                     <section className="card">
                         <h2>Refresh token</h2>
                         <p className="note">
-                            <code>document.cookie</code> reads:{' '}
-                            <code>{document.cookie || '(nothing)'}</code>
+                            Can JavaScript see it?{' '}
+                            <strong className={cookieVisible ? 'bad-text' : 'ok-text'}>
+                                {cookieVisible ? 'yes — something is misconfigured' : 'no'}
+                            </strong>
                         </p>
                         <p className="note">
-                            The cookie is there — the browser sends it on every request to
-                            this origin — but <code>HttpOnly</code> means JavaScript cannot
-                            read it. That is the point: an XSS can steal the short-lived
-                            access token and still cannot renew it.
+                            <code>document.cookie</code> exposes{' '}
+                            {visibleCookieNames.length === 0
+                                ? 'nothing'
+                                : `${visibleCookieNames.length} cookie(s): ${visibleCookieNames.join(', ')}`}
+                            {' '}— and <code>refresh_token</code> is not among them. The
+                            browser is holding it and sending it on every request to this
+                            origin, but <code>HttpOnly</code> keeps it out of reach of
+                            script. An XSS can steal the short-lived access token and still
+                            cannot renew it.
                         </p>
+                        {visibleCookieNames.length > 0 && (
+                            <p className="note">
+                                Those belong to other things run on <code>localhost</code>.
+                                Cookies are scoped by host, not by port, so every dev server on
+                                this machine shares one jar.
+                            </p>
+                        )}
                     </section>
 
                     <section className="card actions">
